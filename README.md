@@ -1,2 +1,2 @@
-# Taxi demand Predicrtor service
+# Taxi demand Predictor service
 
