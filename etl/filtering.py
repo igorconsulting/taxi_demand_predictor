@@ -43,20 +43,28 @@ def check_date_range(df, year, month, date_column):
     return filtered_df
 
 
-def data_filter(df):
+def data_filter(df, file_type):
     """
-    Filters important columns, and drops rows with NaN values.
+    Adjusts the datetime column, filters important columns, and drops rows with NaN values.
     
     Args:
     - df: The pandas DataFrame.
+    - file_type: The type of file being processed (e.g., 'fhv_tripdata', 'yellow_tripdata').
     
     Returns:
-    - Filtered DataFrame with no NaN values in important columns.
+    - Filtered DataFrame with the adjusted datetime column and no NaN values in important columns.
     """
-    # Step 1: Filter to keep only the important columns ('pickup_datetime' and 'PULocationID')
+    # Step 1: Rename the datetime column to 'pickup_datetime'
+    df = df.rename(columns={'pickup_datetime': 'pickup_datetime'})
+    
+    # Handle the special case for 'fhv_tripdata' where the column name is 'PUlocationID' instead of 'PULocationID'
+    if file_type == 'fhv_tripdata':
+        df = df.rename(columns={'PUlocationID': 'PULocationID'})
+    
+    # Step 2: Filter to keep only the important columns ('pickup_datetime' and 'PULocationID')
     df = df[['pickup_datetime', 'PULocationID']]
     
-    # Step 2: Drop rows with NaN values in 'pickup_datetime' or 'PULocationID'
+    # Step 3: Drop rows with NaN values in 'pickup_datetime' or 'PULocationID'
     df = df.dropna(subset=['pickup_datetime', 'PULocationID'])
     
     return df
