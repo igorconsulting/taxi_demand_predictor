@@ -1,9 +1,10 @@
 import pandas as pd
 import os
+from pathlib import Path
 
-def check_date_range(df, year, month, date_column):
+def filter_by_date_range(df, year, month, date_column):
     """
-    Checks if the dates in the specified column are within the given year and month.
+    Filters rows in the DataFrame that match the specified year and month in the given date column.
     
     Args:
     - df: The pandas DataFrame containing the data.
@@ -15,56 +16,53 @@ def check_date_range(df, year, month, date_column):
     - filtered_df: DataFrame containing rows that match the specified year and month.
     """
     
-    # Step 1: Rename the datetime column to 'pickup_datetime'
+    # Rename the datetime column to 'pickup_datetime'
     df = df.rename(columns={date_column: 'pickup_datetime'})
 
-    # Convert the renamed 'pickup_datetime' column to datetime
+    # Convert 'pickup_datetime' to datetime
     df['pickup_datetime'] = pd.to_datetime(df['pickup_datetime'])
 
-    # Find rows where the year and month do not match
+    # Filter rows outside the specified year and month
     outside_range = df[
         (df['pickup_datetime'].dt.year != year) | 
         (df['pickup_datetime'].dt.month != month)
     ]
     
     if not outside_range.empty:
-        print(True)  # Found data outside the expected range
+        print(f"Found {outside_range.shape[0]} rows outside the specified year-month. Filtering them out.")
         
-        # Filter to keep only the rows within the expected year and month
+        # Keep only the rows within the specified year and month
         filtered_df = df[
             (df['pickup_datetime'].dt.year == year) & 
             (df['pickup_datetime'].dt.month == month)
         ]
-        print(f'{outside_range.shape[0]} rows were outside the specified year-month and have been filtered.')
     else:
-        print('No data outside the expected range')
+        print('All data within the expected date range.')
         filtered_df = df  # No filtering needed if all rows match
 
     return filtered_df
 
 
-def data_filter(df, file_type):
+def select_important_columns(df, file_type):
     """
-    Adjusts the datetime column, filters important columns, and drops rows with NaN values.
+    Selects important columns for the analysis, renaming columns where necessary,
+    and removes rows with missing values.
     
     Args:
     - df: The pandas DataFrame.
     - file_type: The type of file being processed (e.g., 'fhv_tripdata', 'yellow_tripdata').
     
     Returns:
-    - Filtered DataFrame with the adjusted datetime column and no NaN values in important columns.
+    - df: DataFrame with only the important columns and no NaN values.
     """
-    # Step 1: Rename the datetime column to 'pickup_datetime'
-    df = df.rename(columns={'pickup_datetime': 'pickup_datetime'})
-    
     # Handle the special case for 'fhv_tripdata' where the column name is 'PUlocationID' instead of 'PULocationID'
     if file_type == 'fhv_tripdata':
         df = df.rename(columns={'PUlocationID': 'PULocationID'})
     
-    # Step 2: Filter to keep only the important columns ('pickup_datetime' and 'PULocationID')
+    # Keep only the important columns ('pickup_datetime' and 'PULocationID')
     df = df[['pickup_datetime', 'PULocationID']]
     
-    # Step 3: Drop rows with NaN values in 'pickup_datetime' or 'PULocationID'
+    # Remove rows with NaN values in the important columns
     df = df.dropna(subset=['pickup_datetime', 'PULocationID'])
     
     return df
@@ -96,7 +94,8 @@ def save_filtered_data(df, original_name, output_dir='../data/filtered'):
 
 def process_file(filename, input_dir='../data/raw', output_dir='../data/filtered'):
     """
-    Processes a single parquet file by filtering data, removing NaN values, and saving the result.
+    Processes a single parquet file by filtering data based on date, selecting important columns, 
+    and saving the result.
     
     Args:
     - filename: The name of the file to process.
@@ -137,11 +136,11 @@ def process_file(filename, input_dir='../data/raw', output_dir='../data/filtered
                     file_path = os.path.join(input_dir, filename)
                     df = pd.read_parquet(file_path)
 
-                    # Check if the dates are within the expected range
-                    df = check_date_range(df, file_year, file_month, original_date_column)
+                    # Filter rows by date range (year and month)
+                    df = filter_by_date_range(df, file_year, file_month, original_date_column)
                     
-                    # Apply data filtering (adjust datetime, filter columns, drop NaN)
-                    df = data_filter(df, pattern)  # Pass the file pattern to handle column name differences
+                    # Select important columns for analysis
+                    df = select_important_columns(df, pattern)  # Handle column name differences
                     
                     # Save the filtered DataFrame
                     save_filtered_data(df, filename.replace('.parquet', ''), output_dir)
