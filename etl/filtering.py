@@ -37,7 +37,7 @@ def check_date_range(df, year, month, date_column):
         ]
         print(f'{outside_range.shape[0]} rows were outside the specified year-month and have been filtered.')
     else:
-        print(False)  # No data outside the expected range
+        print('No data outside the expected range')
         filtered_df = df  # No filtering needed if all rows match
 
     return filtered_df
@@ -107,19 +107,25 @@ def process_file(filename, input_dir='../data/raw', output_dir='../data/filtered
     - None
     """
     try:
+        # Construct the filtered file name and path
+        filtered_filename = f'filtered_{filename}'
+        filtered_file_path = os.path.join(output_dir, filtered_filename)
+
+        # Check if the filtered file already exists
+        if Path(filtered_file_path).exists():
+            print(f'{filtered_filename} already exists. Skipping processing.')
+            return  # Skip this file since it's already processed
+        
         # Known patterns and corresponding original date columns
         file_patterns = {
             'yellow_tripdata': 'tpep_pickup_datetime',
             'green_tripdata': 'lpep_pickup_datetime',
-            'fhv_tripdata': 'pickup_datetime',   # Processing fhv_tripdata
+            'fhv_tripdata': 'pickup_datetime',   # Corrected for fhv files
             'fhvhv_tripdata': 'pickup_datetime'
         }
         
-        # Check each pattern
-        processed = False
         for pattern, original_date_column in file_patterns.items():
             if filename.startswith(pattern):
-                processed = True  # File matched a pattern
                 try:
                     # Extract year and month from the filename
                     parts = filename.split('_')
@@ -134,8 +140,8 @@ def process_file(filename, input_dir='../data/raw', output_dir='../data/filtered
                     # Check if the dates are within the expected range
                     df = check_date_range(df, file_year, file_month, original_date_column)
                     
-                    # Apply data filtering (filter columns, drop NaN)
-                    df = data_filter(df)
+                    # Apply data filtering (adjust datetime, filter columns, drop NaN)
+                    df = data_filter(df, pattern)  # Pass the file pattern to handle column name differences
                     
                     # Save the filtered DataFrame
                     save_filtered_data(df, filename.replace('.parquet', ''), output_dir)
@@ -144,9 +150,6 @@ def process_file(filename, input_dir='../data/raw', output_dir='../data/filtered
                     print(f"Error processing file {filename}: {e}")
                 break
 
-        if not processed:
-            print(f"File {filename} did not match any known patterns.")
-    
     except FileNotFoundError:
         print(f"File {filename} not found.")
     except Exception as e:
@@ -170,4 +173,4 @@ def process_all_parquet_files_in_directory(input_dir='../data/raw', output_dir='
                 process_file(filename, input_dir, output_dir)
             except Exception as e:
                 print(f"Failed to process {filename}: {e}")
-                continue  # Ensure the loop continues to the next file
+                continue
