@@ -2,14 +2,16 @@ import requests
 import sys
 from pathlib import Path
 
-def fetch_raw_data(url, file_name, repo_dir='../data/raw'):
+from src.paths import RAW_DATA_DIR
+
+def fetch_raw_data(url, file_name, repo_dir=RAW_DATA_DIR):
     """
     Downloads the file from the provided URL if it doesn't already exist in the directory.
     
     Args:
     - url: The URL from which the file will be downloaded.
     - file_name: The name with which the file will be saved.
-    - repo_dir: The directory where the file will be saved (default: '../data/raw').
+    - repo_dir: The directory where the file will be saved (default: RAW_DATA_DIR).
     
     Returns:
     - None

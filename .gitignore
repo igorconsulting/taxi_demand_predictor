@@ -4,5 +4,5 @@ data/raw/
 data/filtered/
 data/transformed/
 data/time_series/
-
+src/__pycache__
 #PYTHON ANYWHERE
