@@ -6,7 +6,7 @@ DATA_DIR = PARENT_DIR / '../data'
 RAW_DATA_DIR = DATA_DIR / 'raw'
 FILTERED_DATA_DIR = DATA_DIR / 'filtered'
 TRANSFORMED_DATA_DIR = DATA_DIR / 'transformed'
-TIME_SERIES_DATA_DIR = DATA_DIR / 'time_series'
+TIME_SERIES_DATA_DIR = DATA_DIR / 'time_series_data'
 
 MAIN_PATH_LINK = 'https://d37ci6vzurychx.cloudfront.net/trip-data/'
 YELLOW = 'yellow_tripdata'
