@@ -3,10 +3,29 @@ import pandas as pd
 from tqdm import tqdm
 import numpy as np
 
-from src.paths import FILTERED_DATA_DIR, TRANSFORMED_DATA_DIR, TIME_SERIES_DATA_DIR
+from src.paths import (PARENT_DIR,
+                       FILTERED_DATA_DIR, 
+                       TRANSFORMED_DATA_DIR, 
+                       TIME_SERIES_DATA_DIR
+                       )
 
 # Step 1: Function to add the 'pickup_hour' column and group data by 'pickup_hour' and 'PULocationID'
-def process_filtered_dataframe(df):
+def process_filtered_dataframe(PATH) -> pd.DataFrame:
+    """
+    Process a filtered DataFrame by adding a 'pickup_hour' column and grouping the data by 'pickup_hour' and 'PULocationID'.
+
+    Args:
+
+    - df: A pandas DataFrame containing the filtered data with columns 'pickup_datetime' and 'PULocationID'.
+
+    Returns:
+
+    - A DataFrame with the number of rides for each 'pickup_hour' and 'PULocationID'.
+
+    """
+    # Load the filtered data
+    consolidated_file_path = f"{TIME_SERIES_DATA_DIR}/{PATH}.parquet"
+    df = pd.read_parquet(consolidated_file_path)
     # Add a column for the pickup hour
     df['pickup_hour'] = df['pickup_datetime'].dt.floor('h')
 
@@ -125,7 +144,7 @@ def create_feature_matrix_and_target(df, cutoff_indices):
 
 
 # Step 6: Function to process a parquet file by PULocationID
-def process_feature_target_by_PULocationID(file_path, n_features):
+def process_feature_target_by_PULocationID(df, n_features):
     """
     Process a parquet file, segmenting the data by PULocationID, and apply sliding window transformation
     for each PULocationID. Outputs a single DataFrame with PULocationID, features, and target.
@@ -137,8 +156,6 @@ def process_feature_target_by_PULocationID(file_path, n_features):
     Returns:
     - A single DataFrame with PULocationID, features (feature_0 to feature_{n_features-1}), and target.
     """
-    # Load the parquet file
-    df = pd.read_parquet(file_path)
 
     # Get unique PULocationIDs
     unique_pulocation_ids = df['PULocationID'].unique()
@@ -146,26 +163,36 @@ def process_feature_target_by_PULocationID(file_path, n_features):
     # List to store the results
     rows = []
 
+    print(f"Processing {len(unique_pulocation_ids)} unique PULocationIDs...")
     # Process each PULocationID separately
-    for pulocation_id in tqdm(unique_pulocation_ids):
+    for pulocation_id in unique_pulocation_ids:
         # Filter the dataframe for this specific PULocationID
+        print(f'Filtering the dataframe for this specific PULocationID: {pulocation_id}')
         df_location = df[df['PULocationID'] == pulocation_id].sort_values('pickup_hour')
+        print('Filtered!')
 
         # Generate cutoff indices for the time series
+        print('Generating cutoff indices for the time series')
         cutoff_indices = get_cutoff_indices(df_location, n_features=n_features)
-        
+        print('Generated!')
+
         if len(cutoff_indices) == 0:
             # Skip if there's not enough data to generate the feature matrix
             continue
         
         # Create feature matrix and target vector
+        print('Creating feature matrix and target vector')
         feature_matrix, target_vector = create_feature_matrix_and_target(df_location, cutoff_indices)
-        
+        print('Ccreated!')
+
         # Append the PULocationID, features, and target to the result list
+        print('Appending the PULocationID, features, and target to the result list')
+        print(f'feature_matrix.shape[0]: {feature_matrix.shape[0]}')
         for i in range(feature_matrix.shape[0]):
+            print(f'Appending row {i}...')
             row = [pulocation_id] + list(feature_matrix[i]) + [target_vector[i]]
             rows.append(row)
-
+        print('Appended!')
     # Create a DataFrame with the collected rows
     columns = ['PULocationID'] + [f'feature_{i}' for i in range(n_features)] + ['target']
     final_df = pd.DataFrame(rows, columns=columns)

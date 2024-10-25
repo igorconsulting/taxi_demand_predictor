@@ -8,10 +8,8 @@ from src.paths import (RAW_DATA_DIR,
                        PATH_DATETIME, 
                        FILTERED_DATA_DIR, 
                        TIME_SERIES_DATA_DIR, 
-                       YELLOW, 
-                       GREEN, 
-                       FHV, 
-                       FHVHV)
+                       )
+
 
 
 def fetch_raw_data(url, file_name, repo_dir=RAW_DATA_DIR):
@@ -90,21 +88,3 @@ def concat_filtered_data(PATH):
         print(f'Saved concatenated data to {output_path}')
     else:
         print("No data available to concatenate.")
-
-
-def run_pipeline():
-    # Ensure PATH includes the underscore in each iteration
-    for PATH in [YELLOW]:#, GREEN, FHV, FHVHV]:
-        for year in range(2019, 2022):
-            for month in range(1, 13):
-                download_monthly_data(PATH, year, month)
-                validate_and_filter_year_month(PATH, year, month)
-        
-        # Concatenate all processed data and save
-        concat_filtered_data(PATH)
-
-if __name__ == '__main__':
-    run_pipeline()
-
-# how to run this script
-# python src/etl/extract.py yellow_tripdata
