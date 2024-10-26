@@ -10,7 +10,7 @@ from src.paths import (PARENT_DIR,
                        )
 
 # Step 1: Function to add the 'pickup_hour' column and group data by 'pickup_hour' and 'PULocationID'
-def process_filtered_dataframe(PATH) -> pd.DataFrame:
+def process_filtered_dataframe(df) -> pd.DataFrame:
     """
     Process a filtered DataFrame by adding a 'pickup_hour' column and grouping the data by 'pickup_hour' and 'PULocationID'.
 
@@ -23,9 +23,6 @@ def process_filtered_dataframe(PATH) -> pd.DataFrame:
     - A DataFrame with the number of rides for each 'pickup_hour' and 'PULocationID'.
 
     """
-    # Load the filtered data
-    consolidated_file_path = f"{TIME_SERIES_DATA_DIR}/{PATH}.parquet"
-    df = pd.read_parquet(consolidated_file_path)
     # Add a column for the pickup hour
     df['pickup_hour'] = df['pickup_datetime'].dt.floor('h')
 
