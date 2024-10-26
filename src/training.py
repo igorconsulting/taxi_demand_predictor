@@ -23,3 +23,36 @@ def train_test_split(
     y_test = test[target_column_name]
 
     return X_train, X_test, y_train, y_test
+
+
+def create_training_sets(PATH, cutoff_date, target_column_name): 
+    """
+    Generate separate training and testing sets for each PULocationID.
+    
+    :param PATH: Path to the data file.
+    :param cutoff_date: The cutoff date for splitting into train/test sets.
+    :param target_column_name: The name of the target column.
+    :return: A dictionary where each PULocationID has its (X_train, X_test, y_train, y_test).
+    """
+    data = pd.read_parquet(PATH)
+    
+    # Dictionary to store training/testing sets for each PULocationID
+    training_sets = {}
+
+    for pulocation_id in data['PULocationID'].unique():
+        print(f"Processing PULocationID: {pulocation_id}")
+        
+        # Filter data specific to each PULocationID
+        location_data = data[data['PULocationID'] == pulocation_id].copy()
+        location_data.drop(columns=['PULocationID'], inplace=True)
+        # Perform train/test split for this location
+        X_train, X_test, y_train, y_test = train_test_split(
+            location_data,
+            cutoff_date,
+            target_column_name
+        )
+
+        # Store the result in the dictionary
+        training_sets[pulocation_id] = (X_train, X_test, y_train, y_test)
+
+    return training_sets
