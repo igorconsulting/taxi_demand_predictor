@@ -2,7 +2,7 @@ business-problem.md
 
 data/raw/
 data/filtered/
-data/transformed/
+
 data/time_series_data/
 src/__pycache__
 #PYTHON ANYWHERE
