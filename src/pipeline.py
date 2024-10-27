@@ -2,6 +2,7 @@ from src.extract import download_monthly_data, validate_and_filter_year_month, c
 from src.transform import process_filtered_dataframe, add_missing_slots, process_feature_target_by_PULocationID
 from src.paths import *
 from src.logger import get_logger
+import pandas as pd
 
 def run_pipeline(n_features=24, step_size=1):
     """
@@ -38,13 +39,17 @@ def run_pipeline(n_features=24, step_size=1):
         logger.info(f'Saved grouped data to {grouped_path}')
 
         # Step 4: Transform data to feature-target format using sliding window and step size
-        feature_target_df = process_feature_target_by_PULocationID(
+        feature_df, target_df = process_feature_target_by_PULocationID(
             df_grouped, n_features=n_features, step_size=step_size
         )
-        transformed_path = f'{TRANSFORMED_DATA_DIR}/{PATH}_features_target.parquet'
-        feature_target_df.to_parquet(transformed_path)
-        logger.info(f'Saved transformed feature-target data to {transformed_path}')
+        target_df = pd.DataFrame(target_df, columns=['target_rides_next_hour'])
+        features_transformed_path = f'{TRANSFORMED_DATA_DIR}/{PATH}_features_target.parquet'
+        # join feature and target data
+        feature_target_df = feature_df.join(target_df)
+
+        feature_target_df.to_parquet(features_transformed_path)
+        logger.info(f'Saved transformed feature-target data to {features_transformed_path}')
 
 if __name__ == '__main__':
     # Run the pipeline with specific parameters for n_features and step_size
-    run_pipeline(n_features=24*28, step_size=1)
+    run_pipeline(n_features=24*28, step_size=24)

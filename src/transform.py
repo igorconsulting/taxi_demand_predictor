@@ -136,14 +136,21 @@ def process_feature_target_by_PULocationID(df, n_features, step_size=1):
     - A DataFrame with PULocationID, features, and target.
     """
     logger = get_logger()
+    assert set(df.columns) == {'pickup_hour', 'rides', 'PULocationID'}
 
     unique_pulocation_ids = df['PULocationID'].unique()
-    rows = []
+    features = pd.DataFrame()
+    targets = pd.DataFrame()
 
     logger.info(f"Processing {len(unique_pulocation_ids)} unique PULocationIDs...")
     
     for pulocation_id in tqdm(unique_pulocation_ids):
         df_location = df[df['PULocationID'] == pulocation_id].sort_values('pickup_hour')
+         # keep only ts data for this `location_id`
+        df_location = df_location.loc[
+            df_location['PULocationID'] == pulocation_id, 
+            ['pickup_hour', 'rides']
+        ]
 
         if len(df_location) < n_features:
             continue
@@ -161,20 +168,24 @@ def process_feature_target_by_PULocationID(df, n_features, step_size=1):
         for i, (start_idx, mid_idx, end_idx) in enumerate(cutoff_indices):
             feature_matrix[i, :] = df_location.iloc[start_idx:mid_idx]['rides'].values
             target_vector[i] = df_location.iloc[end_idx]['rides']
-            pickup_hours.append(df_location.iloc[end_idx]['pickup_hour'])
+            pickup_hours.append(df_location.iloc[mid_idx]['pickup_hour'])
 
         # Creates DataFrames of features and targets
-        features_one_location = pd.DataFrame(
+        df_location = pd.DataFrame(
             feature_matrix,
-            columns=[f'feature_{i}' for i in range(n_features)]
+            columns=[f'rides_previous_{i+1}' for i in reversed(range(n_features))]
         )
-        features_one_location['pickup_hour'] = pickup_hours
-        features_one_location['PULocationID'] = pulocation_id
+        df_location['pickup_hour'] = pickup_hours
+        df_location['PULocationID'] = pulocation_id
 
-        targets_one_location = pd.DataFrame(target_vector, columns=['target'])
+        # numpy -> pandas
+        target_vector = pd.DataFrame(target_vector, columns=[f'target_rides_next_hour'])
 
         # Concatenates features and target
-        rows.append(pd.concat([features_one_location, targets_one_location], axis=1))
+        features = pd.concat([features, df_location])
+        targets = pd.concat([targets, target_vector])
 
-    final_df = pd.concat(rows).reset_index(drop=True)
-    return final_df
+    features.reset_index(inplace=True, drop=True)
+    targets.reset_index(inplace=True, drop=True)
+
+    return features, targets['target_rides_next_hour']
