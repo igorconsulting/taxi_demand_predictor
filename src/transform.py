@@ -176,7 +176,7 @@ def process_feature_target_by_PULocationID(df, n_features, step_size=1):
 
     logger.info(f"Processing {len(unique_pulocation_ids)} unique PULocationIDs...")
     
-    for pulocation_id in unique_pulocation_ids:
+    for pulocation_id in tqdm(unique_pulocation_ids):
         df_location = df[df['PULocationID'] == pulocation_id].sort_values('pickup_hour')
 
         if len(df_location) < n_features:
