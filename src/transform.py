@@ -63,39 +63,8 @@ def add_missing_slots(df_grouped) -> pd.DataFrame:
     
     return output
 
-# Step 3: Function to process all parquet files in a folder
-def process_all_filtered_files(input_dir=FILTERED_DATA_DIR, output_dir=TRANSFORMED_DATA_DIR):
-    logger = get_logger()
-    # Ensure the output directory exists
-    os.makedirs(output_dir, exist_ok=True)
-    
-    # Loop through each file in the input directory
-    for filename in os.listdir(input_dir):
-        if filename.endswith('.parquet'):
-            output_file = f"transformed_{filename}"
-            output_path = os.path.join(output_dir, output_file)
-            
-            # Check if the transformed file already exists
-            if os.path.exists(output_path):
-                print(f"{output_file} already exists. Skipping processing.")
-                continue  # Skip this file if already processed
 
-            file_path = os.path.join(input_dir, filename)
-            logger.info(f"Processing file: {filename}")
-
-            # Read the parquet file
-            df = pd.read_parquet(file_path)
-            
-            # Process the dataframe (add pickup_hour, group by, and add missing slots)
-            df_grouped = process_filtered_dataframe(df)
-            complete_df_grouped = add_missing_slots(df_grouped)
-
-            # Save the transformed dataframe as a parquet file in the output directory
-            complete_df_grouped.to_parquet(output_path)
-            logger.info(f"Saved transformed file: {output_file}")
-
-
-# Step 4: Function to generate the feature matrix and target vector
+# Step 3: Function to generate the feature matrix and target vector
 def get_cutoff_indices(df: pd.DataFrame, n_features: int, step_size: int = 1) -> list:
     """
     Generate cutoff indices for creating features and targets from time series data.
@@ -125,9 +94,7 @@ def get_cutoff_indices(df: pd.DataFrame, n_features: int, step_size: int = 1) ->
     return indices
 
 
-# Step 5: Function to create the feature matrix and target vector
-import numpy as np
-
+# Step 4: Function to create the feature matrix and target vector
 def create_feature_matrix_and_target(df, cutoff_indices):
     """
     Creates a feature matrix and a target vector from a DataFrame using sliding window indices.
@@ -155,8 +122,7 @@ def create_feature_matrix_and_target(df, cutoff_indices):
     return feature_matrix, target_vector
 
 
-
-# Step 6: Function to process a parquet file by PULocationID
+# Step 5: Function to process a parquet file by PULocationID
 def process_feature_target_by_PULocationID(df, n_features, step_size=1):
     """
     Process data by PULocationID and apply sliding window transformation for each PULocationID.
@@ -212,58 +178,3 @@ def process_feature_target_by_PULocationID(df, n_features, step_size=1):
 
     final_df = pd.concat(rows).reset_index(drop=True)
     return final_df
-
-
-# Step 7: Function to process all transformed files
-def process_all_transformed_files(input_dir=TRANSFORMED_DATA_DIR, output_dir=TIME_SERIES_DATA_DIR, n_features=24):
-    """
-    Process all files in the 'data/transformed' folder that follow the naming pattern
-    'transformed_filtered_{type}_{year}-{month}.parquet' and save them to 'data/time_series' 
-    with the name 'ts_{type}_{year}-{month}.parquet'.
-    
-    Args:
-    - input_dir: Directory where the transformed parquet files are located.
-    - output_dir: Directory where the time series parquet files will be saved.
-    - n_features: Number of previous time steps to use as features (default is 24).
-    
-    Returns:
-    - None: The function saves the processed files in the output directory.
-    """
-    logger = get_logger()
-    # Ensure the output directory exists
-    os.makedirs(output_dir, exist_ok=True)
-    
-    # Iterate over all parquet files in the input directory
-    for filename in os.listdir(input_dir):
-        if filename.endswith('.parquet') and filename.startswith('transformed_filtered_'):
-            try:
-                # Remove the prefix and suffix to get the core file name
-                file_core = filename.replace('transformed_filtered_', '').replace('.parquet', '')
-
-                # Use the last underscore to separate the type from the year-month
-                data_type, year_month = file_core.rsplit('_', 1)
-                
-                # Extract year and month from the year_month string
-                year, month = year_month.split('-')
-                # Create the new filename following the pattern ts_{type}_{year}-{month}.parquet
-                output_filename = f'ts_{data_type}_{year}-{month}.parquet'
-                output_path = os.path.join(output_dir, output_filename)
-
-                # Skip the file if it already exists
-                if os.path.exists(output_path):
-                    logger.info(f"{output_filename} already exists. Skipping.")
-                    continue
-
-                # Full path to the current input file
-                input_path = os.path.join(input_dir, filename)
-
-                # Process the file to get the time series data for each PULocationID
-                logger.info(f"Processing {filename}...")
-                final_df = process_feature_target_by_PULocationID(input_path, n_features)
-
-                # Save the processed DataFrame as a parquet file
-                final_df.to_parquet(output_path)
-                logger.info(f"Saved {output_filename} to {output_dir}")
-
-            except Exception as e:
-                logger.info(f"Error processing {filename}: {e}")
