@@ -8,6 +8,7 @@ RAW_DATA_DIR = DATA_DIR / 'raw'
 FILTERED_DATA_DIR = DATA_DIR / 'filtered'
 TRANSFORMED_DATA_DIR = DATA_DIR / 'transformed'
 TIME_SERIES_DATA_DIR = DATA_DIR / 'time_series_data'
+MODELS_DIR = PARENT_DIR / 'models'
 
 # Link Settings and Constants
 MAIN_PATH_LINK = 'https://d37ci6vzurychx.cloudfront.net/trip-data/'
@@ -30,5 +31,5 @@ PATH_DATETIME = {
 }
 
 # Creates all directories if they do not exist
-for directory in [DATA_DIR, RAW_DATA_DIR, FILTERED_DATA_DIR, TRANSFORMED_DATA_DIR, TIME_SERIES_DATA_DIR]:
+for directory in [DATA_DIR, RAW_DATA_DIR, FILTERED_DATA_DIR, TRANSFORMED_DATA_DIR, TIME_SERIES_DATA_DIR, MODELS_DIR]:
     directory.mkdir(parents=True, exist_ok=True)

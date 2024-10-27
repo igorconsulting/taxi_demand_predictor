@@ -32,63 +32,47 @@ def plot_one_sample(
     - Actual target value as a green dot, if provided.
     - Predicted target value as a red "X" marker, if provided.
     """
-
-    # Retrieve specific feature sample based on the sample index
-    feature_sample = features.iloc[sample_idx].copy()
-    
-    # Retrieve target sample value if available
+    # PULocationID is the location_id
+    feature_sample = features.iloc[sample_idx]
     target_sample = target.iloc[sample_idx]
-
-    # Extract columns that represent time series features (assumed to start with "feature_")
-    ts_columns = [column for column in features.columns if column.startswith('feature_')]
     
-    # Combine feature values and target sample into a single list for plotting
+    ts_columns = [column for column in features.columns if column.startswith('rides_previous_')]
     ts_values = [feature_sample[column] for column in ts_columns] + [target_sample]
 
-    # Create a range of dates based on the length of the time series columns, ending with `pickup_hour`
     ts_dates = pd.date_range(
-        start=feature_sample['pickup_hour'] - timedelta(hours=len(ts_columns)),
-        end=feature_sample['pickup_hour'],
-        freq='H'
-    )
-
-    # Generate the base line plot with past values from the time series
-    title = (
-        f'Pick up hour = {feature_sample["pickup_hour"]}, location_id={feature_sample["PULocationID"]}'
-        if display_title else None
-    )
-    fig = px.line(
-        x=ts_dates,
-        y=ts_values,
-        template='plotly_dark',
-        markers=True,
-        title=title
-    )
+        start = feature_sample['pickup_hour'] - timedelta(hours = len(ts_columns)),
+        end = feature_sample['pickup_hour'],
+        freq='h'
+        )
     
-    # If target is provided, add a green dot for the actual target value to indicate the prediction target
+    # line plot with past values
+    title = f'Pick up hour = {feature_sample["pickup_hour"]}, location_id={feature_sample["PULocationID"]}'  if display_title else None
+    fig = px.line(x=ts_dates,
+                  y=ts_values,
+                  template = 'plotly_dark',
+                  markers=True,
+                  title=title)
+    
     if target_sample is not None:
-        fig.add_scatter(
-            x=[ts_dates[-1]],
-            y=[target_sample],
-            line_color='green',
-            mode='markers',
-            marker_size=10,
-            name='Actual value'
-        )
+        # green dot for the value we want to predict
+        fig.add_scatter(x=[ts_dates[-1]],
+                        y=[target_sample],
+                        line_color='green',
+                        mode='markers',
+                        marker_size=10,
+                        name='actual value')
     
-    # If predictions are provided, add a red "X" marker to indicate the predicted value
     if predictions is not None:
-        fig.add_scatter(
-            x=[ts_dates[-1]],
-            y=[predictions.iloc[sample_idx]],
-            line_color='red',
-            mode='markers',
-            marker_size=15,
-            marker_symbol='x',
-            name='Predicted value'
-        )
-    
-    return fig  # Return the Plotly figure for further display or processing
+        # red dot for the predicted value
+        fig.add_scatter(x=[ts_dates[-1]],
+                        y=[predictions.iloc[sample_idx]],
+                        line_color='red',
+                        mode='markers',
+                        marker_size=15,
+                        marker_symbol='x',
+                        name='Predicted value')
+        
+    return fig
 
 
 def plot_ts(
@@ -111,20 +95,17 @@ def plot_ts(
     - Color-coded lines for each unique "PULocationID" in the data.
     """
 
-    # Filter data for specified locations if provided
     if locations is not None:
         ts_data_to_plot = ts_data[ts_data['PULocationID'].isin(locations)].copy()
     else:
-        ts_data_to_plot = ts_data.copy()  # Use the full dataset if no specific locations are given
+        ts_data_to_plot = ts_data.copy()
 
-    # Create a line plot of rides over time, grouped by location (PULocationID)
     fig = px.line(
         ts_data_to_plot,
         x='pickup_hour',
-        y='rides',
-        color='PULocationID',  # Color lines by PULocationID for distinct representation
-        template='none'  # Use a minimal Plotly template for a clean look
+        y='target_rides_next_hour',
+        color='PULocationID',
+        template='none'
     )
 
-    # Display the interactive plot
     fig.show()
