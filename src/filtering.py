@@ -2,6 +2,7 @@ import pandas as pd
 import os
 from pathlib import Path
 from src.paths import RAW_DATA_DIR, FILTERED_DATA_DIR, FHV, PATH_DATETIME
+from src.logger import get_logger
 
 def filter_by_date_range(df, year, month, date_column):
     """
@@ -44,12 +45,13 @@ def process_file(filename, input_dir=RAW_DATA_DIR, output_dir=FILTERED_DATA_DIR)
     Processes a single parquet file by filtering data based on date, selecting important columns, 
     and saving the result.
     """
+    logger = get_logger()
     try:
         filtered_filename = f'filtered_{filename}'
         filtered_file_path = os.path.join(output_dir, filtered_filename)
 
         if Path(filtered_file_path).exists():
-            print(f'{filtered_filename} already exists. Skipping processing.')
+            logger.info(f'{filtered_filename} already exists. Skipping processing.')
             return
         
         for pattern in PATH_DATETIME:
@@ -66,21 +68,22 @@ def process_file(filename, input_dir=RAW_DATA_DIR, output_dir=FILTERED_DATA_DIR)
                     df = select_important_columns(df, pattern)
                     save_filtered_data(df, filename.replace('.parquet', ''), output_dir)
                 except Exception as e:
-                    print(f"Error processing file {filename}: {e}")
+                    logger.info(f"Error processing file {filename}: {e}")
                 break
     except FileNotFoundError:
-        print(f"File {filename} not found.")
+        logger.info(f"File {filename} not found.")
     except Exception as e:
-        print(f"Unexpected error processing {filename}: {e}")
+        logger.info(f"Unexpected error processing {filename}: {e}")
 
 def process_all_parquet_files_in_directory(input_dir=RAW_DATA_DIR, output_dir=FILTERED_DATA_DIR):
     """
     Processes all parquet files in the input directory that follow the known patterns.
     """
+    logger = get_logger()
     for filename in os.listdir(input_dir):
         if filename.endswith('.parquet'):
             try:
                 process_file(filename, input_dir, output_dir)
             except Exception as e:
-                print(f"Failed to process {filename}: {e}")
+                logger.info(f"Failed to process {filename}: {e}")
                 continue

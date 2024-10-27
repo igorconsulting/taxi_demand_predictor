@@ -2,6 +2,7 @@ import os
 import pandas as pd
 from tqdm import tqdm
 import numpy as np
+from src.logger import get_logger
 
 from src.paths import (PARENT_DIR,
                        FILTERED_DATA_DIR, 
@@ -64,9 +65,10 @@ def add_missing_slots(df_grouped) -> pd.DataFrame:
 
 # Step 3: Function to process all parquet files in a folder
 def process_all_filtered_files(input_dir=FILTERED_DATA_DIR, output_dir=TRANSFORMED_DATA_DIR):
+    logger = get_logger()
     # Ensure the output directory exists
     os.makedirs(output_dir, exist_ok=True)
-
+    
     # Loop through each file in the input directory
     for filename in os.listdir(input_dir):
         if filename.endswith('.parquet'):
@@ -79,7 +81,7 @@ def process_all_filtered_files(input_dir=FILTERED_DATA_DIR, output_dir=TRANSFORM
                 continue  # Skip this file if already processed
 
             file_path = os.path.join(input_dir, filename)
-            print(f"Processing file: {filename}")
+            logger.info(f"Processing file: {filename}")
 
             # Read the parquet file
             df = pd.read_parquet(file_path)
@@ -90,7 +92,7 @@ def process_all_filtered_files(input_dir=FILTERED_DATA_DIR, output_dir=TRANSFORM
 
             # Save the transformed dataframe as a parquet file in the output directory
             complete_df_grouped.to_parquet(output_path)
-            print(f"Saved transformed file: {output_file}")
+            logger.info(f"Saved transformed file: {output_file}")
 
 
 # Step 4: Function to generate the feature matrix and target vector
@@ -167,11 +169,12 @@ def process_feature_target_by_PULocationID(df, n_features, step_size=1):
     Returns:
     - A DataFrame with PULocationID, features, and target.
     """
+    logger = get_logger()
 
     unique_pulocation_ids = df['PULocationID'].unique()
     rows = []
 
-    print(f"Processing {len(unique_pulocation_ids)} unique PULocationIDs...")
+    logger.info(f"Processing {len(unique_pulocation_ids)} unique PULocationIDs...")
     
     for pulocation_id in unique_pulocation_ids:
         df_location = df[df['PULocationID'] == pulocation_id].sort_values('pickup_hour')
@@ -226,6 +229,7 @@ def process_all_transformed_files(input_dir=TRANSFORMED_DATA_DIR, output_dir=TIM
     Returns:
     - None: The function saves the processed files in the output directory.
     """
+    logger = get_logger()
     # Ensure the output directory exists
     os.makedirs(output_dir, exist_ok=True)
     
@@ -247,19 +251,19 @@ def process_all_transformed_files(input_dir=TRANSFORMED_DATA_DIR, output_dir=TIM
 
                 # Skip the file if it already exists
                 if os.path.exists(output_path):
-                    print(f"{output_filename} already exists. Skipping.")
+                    logger.info(f"{output_filename} already exists. Skipping.")
                     continue
 
                 # Full path to the current input file
                 input_path = os.path.join(input_dir, filename)
 
                 # Process the file to get the time series data for each PULocationID
-                print(f"Processing {filename}...")
+                logger.info(f"Processing {filename}...")
                 final_df = process_feature_target_by_PULocationID(input_path, n_features)
 
                 # Save the processed DataFrame as a parquet file
                 final_df.to_parquet(output_path)
-                print(f"Saved {output_filename} to {output_dir}")
+                logger.info(f"Saved {output_filename} to {output_dir}")
 
             except Exception as e:
-                print(f"Error processing {filename}: {e}")
+                logger.info(f"Error processing {filename}: {e}")

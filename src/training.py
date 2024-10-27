@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Tuple
 import pandas as pd
+from src.logger import get_logger
 
 def train_test_split(
         df: pd.DataFrame,
@@ -34,13 +35,14 @@ def create_training_sets(PATH, cutoff_date, target_column_name):
     :param target_column_name: The name of the target column.
     :return: A dictionary where each PULocationID has its (X_train, X_test, y_train, y_test).
     """
+    logger = get_logger()
     data = pd.read_parquet(PATH)
     
     # Dictionary to store training/testing sets for each PULocationID
     training_sets = {}
 
     for pulocation_id in data['PULocationID'].unique():
-        print(f"Processing PULocationID: {pulocation_id}")
+        logger.info(f"Processing PULocationID: {pulocation_id}")
         
         # Filter data specific to each PULocationID
         location_data = data[data['PULocationID'] == pulocation_id].copy()
