@@ -23,7 +23,7 @@ def train_test_split(
     X_test = test.drop(columns=[target_column_name])
     y_test = test[target_column_name]
 
-    return X_train, X_test, y_train, y_test
+    return X_train, y_train, X_test, y_test
 
 
 def create_training_sets(PATH, cutoff_date, target_column_name): 
