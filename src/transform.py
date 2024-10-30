@@ -10,6 +10,7 @@ from src.paths import (PARENT_DIR,
                        TIME_SERIES_DATA_DIR
                        )
 
+logger = get_logger()
 # Step 1: Function to add the 'pickup_hour' column and group data by 'pickup_hour' and 'PULocationID'
 def process_filtered_dataframe(df) -> pd.DataFrame:
     """
@@ -135,7 +136,7 @@ def process_feature_target_by_PULocationID(df, n_features, step_size=1):
     Returns:
     - A DataFrame with PULocationID, features, and target.
     """
-    logger = get_logger()
+    
     assert set(df.columns) == {'pickup_hour', 'rides', 'PULocationID'}
 
     unique_pulocation_ids = df['PULocationID'].unique()

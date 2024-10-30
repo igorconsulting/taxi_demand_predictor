@@ -58,3 +58,40 @@ def create_training_sets(PATH, cutoff_date, target_column_name):
         training_sets[pulocation_id] = (X_train, X_test, y_train, y_test)
 
     return training_sets
+
+def get_cutoff_training_date(data: pd.DataFrame, n_months=6) -> pd.Timestamp:
+    """
+    Determines the cutoff date for training data based on a specified number of months before the latest date in the dataset.
+
+    This function calculates a cutoff date by subtracting a given number of months (default is 6) from the latest date in the `pickup_hour` column.
+    This cutoff date can be used to split the dataset into training and testing periods, allowing the model to be trained only on data up to that point.
+
+    Parameters:
+    -----------
+    data : pd.DataFrame
+        The input DataFrame containing a 'pickup_hour' column with date and time values, which must be in datetime format.
+    n_months : int, optional
+        The number of months before the latest date to set as the cutoff for training data. Default is 6 months.
+
+    Returns:
+    --------
+    pd.Timestamp
+        The cutoff date for training, which is `n_months` months before the latest date in the 'pickup_hour' column.
+
+    Example:
+    --------
+    >>> cutoff_date = get_cutoff_training_date(data, n_months=6)
+    >>> training_data = data[data['pickup_hour'] < cutoff_date]
+    >>> testing_data = data[data['pickup_hour'] >= cutoff_date]
+    """
+    
+    # Ensure the 'pickup_hour' column is in datetime format
+    data['pickup_hour'] = pd.to_datetime(data['pickup_hour'])
+
+    # Find the latest date in the 'pickup_hour' column
+    last_date = data['pickup_hour'].max()
+
+    # Calculate the cutoff date by subtracting n_months from last_date
+    cutoff_training_date = last_date - pd.DateOffset(months=n_months)
+
+    return cutoff_training_date

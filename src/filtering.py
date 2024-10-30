@@ -4,6 +4,8 @@ from pathlib import Path
 from src.paths import RAW_DATA_DIR, FILTERED_DATA_DIR, FHV, PATH_DATETIME
 from src.logger import get_logger
 
+logger = get_logger()
+
 def filter_by_date_range(df, year, month, date_column):
     """
     Filter the DataFrame to include only rows within the specified date range.
@@ -38,4 +40,4 @@ def save_filtered_data(df, original_name, output_dir=FILTERED_DATA_DIR):
     filtered_filename = f'filtered_{original_name}.parquet'
     output_path = os.path.join(output_dir, filtered_filename)
     df.to_parquet(output_path)
-    print(f'Filtered data saved to {output_path}')
+    logger.info(f'Filtered data saved to {output_path}')

@@ -2,6 +2,7 @@ import requests
 import sys
 from pathlib import Path
 import pandas as pd
+from src.logger import get_logger
 from src.filtering import filter_by_date_range, select_important_columns
 from src.paths import (RAW_DATA_DIR, 
                        MAIN_PATH_LINK, 
@@ -10,7 +11,7 @@ from src.paths import (RAW_DATA_DIR,
                        TIME_SERIES_DATA_DIR, 
                        )
 
-
+logger = get_logger()
 
 def fetch_raw_data(url, file_name, repo_dir=RAW_DATA_DIR):
     file_path = Path(repo_dir) / file_name
@@ -23,7 +24,7 @@ def fetch_raw_data(url, file_name, repo_dir=RAW_DATA_DIR):
         print(f'{file_name} downloaded successfully to {repo_dir}')
         return True
     except requests.exceptions.RequestException as e:
-        print(f"Error fetching data from {url}: {e}")
+        logger.error(f"Error fetching data from {file_name}: {e}")
         return False
 
 
@@ -62,10 +63,10 @@ def validate_and_filter_year_month(PATH, year, month):
         # Save the validated, filtered data
         Path(FILTERED_DATA_DIR).mkdir(parents=True, exist_ok=True)
         filtered_df.to_parquet(filtered_file_path)
-        print(f'Saved filtered data to {filtered_file_path}')
+        logger.info(f'Saved filtered data to {filtered_file_path}')
         
     except Exception as e:
-        print(f"Error processing {file_path}: {e}")
+        logger.error(f"Error processing {file_path}: {e}")
 
 
 def concat_filtered_data(PATH):
@@ -103,9 +104,9 @@ def concat_filtered_data(PATH):
         # Save the concatenated DataFrame to a single parquet file
         output_path = f'{TIME_SERIES_DATA_DIR}/{PATH}.parquet'
         df.to_parquet(output_path)
-        print(f'Saved concatenated data to {output_path}')
+        logger.info(f'Saved concatenated data to {output_path}')
         return df  # Return the concatenated DataFrame
     else:
-        print("No data available to concatenate.")
+        logger.warning("No data available to concatenate.")
         return pd.DataFrame()  # Return an empty DataFrame if no files were found
 
