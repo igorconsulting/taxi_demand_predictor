@@ -7,7 +7,7 @@ def plot_one_sample(
         features: pd.DataFrame,
         target: pd.Series,
         sample_idx: int,
-        predictions: Optional[pd.Series] = None,
+        prediction: Optional[pd.Series] = None,
         display_title: Optional[bool] = True
 ) -> None:
     """
@@ -19,7 +19,7 @@ def plot_one_sample(
         Must include columns starting with "feature_" for time series data and "pickup_hour" for timestamp.
     - target (pd.Series): Series with actual target values for each sample (number of rides).
     - sample_idx (int): Index of the sample to plot within the DataFrame and Series.
-    - predictions (Optional[pd.Series], optional): Series containing predicted values, if available. 
+    - prediction (Optional[pd.Series], optional): Series containing predicted values, if available. 
         Defaults to None.
     - display_title (Optional[bool], optional): Boolean flag to display the title in the plot. 
         Defaults to True.
@@ -62,10 +62,10 @@ def plot_one_sample(
                         marker_size=10,
                         name='actual value')
     
-    if predictions is not None:
+    if prediction is not None:
         # red dot for the predicted value
         fig.add_scatter(x=[ts_dates[-1]],
-                        y=[predictions.iloc[sample_idx]],
+                        y=[prediction.iloc[sample_idx]],
                         line_color='red',
                         mode='markers',
                         marker_size=15,
