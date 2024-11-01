@@ -4,12 +4,6 @@ from tqdm import tqdm
 import numpy as np
 from src.logger import get_logger
 
-from src.paths import (PARENT_DIR,
-                       FILTERED_DATA_DIR, 
-                       TRANSFORMED_DATA_DIR, 
-                       TIME_SERIES_DATA_DIR
-                       )
-
 logger = get_logger()
 # Step 1: Function to add the 'pickup_hour' column and group data by 'pickup_hour' and 'PULocationID'
 def process_filtered_dataframe(df) -> pd.DataFrame:
