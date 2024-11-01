@@ -32,12 +32,3 @@ def select_important_columns(df, PATH):
     
     return filtered_df
 
-def save_filtered_data(df, original_name, output_dir=FILTERED_DATA_DIR):
-    """
-    Saves the filtered DataFrame to a parquet file with a prefix 'filtered_'.
-    """
-    os.makedirs(output_dir, exist_ok=True)
-    filtered_filename = f'filtered_{original_name}.parquet'
-    output_path = os.path.join(output_dir, filtered_filename)
-    df.to_parquet(output_path)
-    logger.info(f'Filtered data saved to {output_path}')

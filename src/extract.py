@@ -82,7 +82,7 @@ def concat_filtered_data(PATH):
     """
     dataframes = []
     
-    for year in range(2019, 2022):
+    for year in range(2022, 2025):
         for month in range(1, 13):
             # Construct the path for the filtered parquet file
             filtered_file_path = f'{FILTERED_DATA_DIR}/{PATH}_{year}-{str(month).zfill(2)}.parquet'

@@ -15,7 +15,7 @@ def run_pipeline(n_features=24, step_size=1):
     logger = get_logger()
     for PATH in [YELLOW]:  # Add other paths as needed, e.g., GREEN, FHV, FHVHV
         # Step 1: Download and validate data for each month
-        for year in range(2019, 2022):
+        for year in range(2022, 2025):
             for month in range(1, 13):
                 logger.info(f"Processing {PATH} data for {year}-{month}")
                 download_monthly_data(PATH, year, month)
@@ -52,4 +52,4 @@ def run_pipeline(n_features=24, step_size=1):
 
 if __name__ == '__main__':
     # Run the pipeline with specific parameters for n_features and step_size
-    run_pipeline(n_features=24*28, step_size=24)
+    run_pipeline(n_features=24*28, step_size=23)
