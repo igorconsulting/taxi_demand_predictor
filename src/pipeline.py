@@ -1,55 +1,45 @@
-from src.extract import download_monthly_data, validate_and_filter_year_month, concat_filtered_data
+from src.extract import fetch_data_if_not_exists, validate_and_process_data, concatenate_filtered_data
 from src.transform import process_filtered_dataframe, add_missing_slots, process_feature_target_by_PULocationID
 from src.paths import *
 from src.logger import get_logger
 import pandas as pd
 
+def save_and_log_dataframe(df, path, logger, message):
+    """Saves a DataFrame to a specified path and logs the action."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    df.to_parquet(path)
+    logger.info(f'{message} {path}')
+
 def run_pipeline(n_features=24, step_size=1):
-    """
-    Runs the data processing pipeline for each PATH, using n_features for the sliding window and step_size for window shifts.
-    
-    Args:
-    - n_features: Number of previous time steps to use as features.
-    - step_size: Number of steps to shift the window after each iteration.
-    """
+    """Runs the data processing pipeline for each PATH."""
     logger = get_logger()
-    for PATH in [YELLOW]:  # Add other paths as needed, e.g., GREEN, FHV, FHVHV
-        # Step 1: Download and validate data for each month
+    for path in [YELLOW]:  # Expand paths as needed
         for year in range(2022, 2025):
             for month in range(1, 13):
-                logger.info(f"Processing {PATH} data for {year}-{month}")
-                download_monthly_data(PATH, year, month)
-                logger.info(f"Downloaded {PATH} data for {year}-{month}")
-                validate_and_filter_year_month(PATH, year, month)
-                logger.info(f"Validated and filtered {PATH} data for {year}-{month}")
+                fetch_data_if_not_exists(path, year, month)
+                validate_and_process_data(path, year, month)
         
-        # Step 2: Concatenate all filtered data and proceed if not empty
-        df_filtered = concat_filtered_data(PATH)
+        df_filtered = concatenate_filtered_data(path)
         if df_filtered.empty:
-            logger.info(f"No filtered data to concatenate for {PATH}.")
-            continue  # Skip to the next PATH if no data
-        df_filtered.to_parquet(f'{TIME_SERIES_DATA_DIR}/{PATH}_filtered.parquet')
-        logger.info(f'Saved concatenated filtered data to {TIME_SERIES_DATA_DIR}/{PATH}_filtered.parquet')
+            logger.info(f"No filtered data to concatenate for {path}.")
+            continue
 
-        # Step 3: Process the data to fill missing slots and save grouped data
-        df_grouped = process_filtered_dataframe(df_filtered)
-        df_grouped = add_missing_slots(df_grouped)
-        grouped_path = f'{TIME_SERIES_DATA_DIR}/{PATH}_grouped.parquet'
-        df_grouped.to_parquet(grouped_path)
-        logger.info(f'Saved grouped data to {grouped_path}')
+        # Save concatenated data
+        filtered_path = Path(TIME_SERIES_DATA_DIR) / f"{path}.parquet"
+        save_and_log_dataframe(df_filtered, filtered_path, logger, "Saved concatenated data to")
 
-        # Step 4: Transform data to feature-target format using sliding window and step size
-        feature_df, target_df = process_feature_target_by_PULocationID(
-            df_grouped, n_features=n_features, step_size=step_size
-        )
-        target_df = pd.DataFrame(target_df, columns=['target_rides_next_hour'])
-        features_transformed_path = f'{TRANSFORMED_DATA_DIR}/{PATH}_features_target.parquet'
-        # join feature and target data
-        feature_target_df = feature_df.join(target_df)
+        # Process and save grouped data
+        df_grouped = add_missing_slots(process_filtered_dataframe(df_filtered))
+        grouped_path = Path(TIME_SERIES_DATA_DIR) / f"{path}_grouped.parquet"
+        save_and_log_dataframe(df_grouped, grouped_path, logger, "Saved grouped data to")
 
-        feature_target_df.to_parquet(features_transformed_path)
-        logger.info(f'Saved transformed feature-target data to {features_transformed_path}')
+        # Transform to feature-target format and save
+        feature_df, target_df = process_feature_target_by_PULocationID(df_grouped, n_features=n_features, step_size=step_size)
+        feature_target_df = feature_df.join(pd.DataFrame(target_df, columns=['target_rides_next_hour']))
+        feature_target_path = Path(TRANSFORMED_DATA_DIR) / f"{path}_features_target.parquet"
+        save_and_log_dataframe(feature_target_df, feature_target_path, logger, "Saved transformed feature-target data to")
+        
+        logger.info(f"Pipeline completed for {path}.")
 
 if __name__ == '__main__':
-    # Run the pipeline with specific parameters for n_features and step_size
     run_pipeline(n_features=24*28, step_size=23)

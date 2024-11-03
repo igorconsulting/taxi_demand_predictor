@@ -7,4 +7,5 @@ data/
 *.shp
 *.pkl
 .TODOS
+.metaflow/
 models/

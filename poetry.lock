@@ -233,6 +233,44 @@ webencodings = "*"
 css = ["tinycss2 (>=1.1.0,<1.3)"]
 
 [[package]]
+name = "boto3"
+version = "1.35.54"
+description = "The AWS SDK for Python"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "boto3-1.35.54-py3-none-any.whl", hash = "sha256:2d5e160b614db55fbee7981001c54476cb827c441cef65b2fcb2c52a62019909"},
+    {file = "boto3-1.35.54.tar.gz", hash = "sha256:7d9c359bbbc858a60b51c86328db813353c8bd1940212cdbd0a7da835291c2e1"},
+]
+
+[package.dependencies]
+botocore = ">=1.35.54,<1.36.0"
+jmespath = ">=0.7.1,<2.0.0"
+s3transfer = ">=0.10.0,<0.11.0"
+
+[package.extras]
+crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
+
+[[package]]
+name = "botocore"
+version = "1.35.54"
+description = "Low-level, data-driven core of boto 3."
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "botocore-1.35.54-py3-none-any.whl", hash = "sha256:9cca1811094b6cdc144c2c063a3ec2db6d7c88194b04d4277cd34fc8e3473aff"},
+    {file = "botocore-1.35.54.tar.gz", hash = "sha256:131bb59ce59c8a939b31e8e647242d70cf11d32d4529fa4dca01feea1e891a76"},
+]
+
+[package.dependencies]
+jmespath = ">=0.7.1,<2.0.0"
+python-dateutil = ">=2.1,<3.0.0"
+urllib3 = {version = ">=1.25.4,<2.2.0 || >2.2.0,<3", markers = "python_version >= \"3.10\""}
+
+[package.extras]
+crt = ["awscrt (==0.22.0)"]
+
+[[package]]
 name = "certifi"
 version = "2024.8.30"
 description = "Python package for providing Mozilla's CA Bundle."
@@ -1061,6 +1099,17 @@ MarkupSafe = ">=2.0"
 i18n = ["Babel (>=2.7)"]
 
 [[package]]
+name = "jmespath"
+version = "1.0.1"
+description = "JSON Matching Expressions"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "jmespath-1.0.1-py3-none-any.whl", hash = "sha256:02e2e4cc71b5bcab88332eebf907519190dd9e6e82107fa7f83b1003a6252980"},
+    {file = "jmespath-1.0.1.tar.gz", hash = "sha256:90261b206d6defd58fdd5e85f478bf633a2901798906be2ad389150c5c60edbe"},
+]
+
+[[package]]
 name = "joblib"
 version = "1.4.2"
 description = "Lightweight pipelining with Python functions"
@@ -1709,6 +1758,24 @@ files = [
 
 [package.dependencies]
 traitlets = "*"
+
+[[package]]
+name = "metaflow"
+version = "2.12.28"
+description = "Metaflow: More Data Science, Less Engineering"
+optional = false
+python-versions = "*"
+files = [
+    {file = "metaflow-2.12.28-py2.py3-none-any.whl", hash = "sha256:464f0f58d158b16dd35ee5531a29b896cbf77c6393ffa6c0d16a786138f8da99"},
+    {file = "metaflow-2.12.28.tar.gz", hash = "sha256:8e0678930d4e4e1b1e14e35b5a91e8cba18a10eca76264e9d08703268da8c04f"},
+]
+
+[package.dependencies]
+boto3 = "*"
+requests = "*"
+
+[package.extras]
+stubs = ["metaflow-stubs (==2.12.28)"]
 
 [[package]]
 name = "mistune"
@@ -2845,6 +2912,23 @@ files = [
 ]
 
 [[package]]
+name = "s3transfer"
+version = "0.10.3"
+description = "An Amazon S3 Transfer Manager"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "s3transfer-0.10.3-py3-none-any.whl", hash = "sha256:263ed587a5803c6c708d3ce44dc4dfedaab4c1a32e8329bab818933d79ddcf5d"},
+    {file = "s3transfer-0.10.3.tar.gz", hash = "sha256:4f50ed74ab84d474ce614475e0b8d5047ff080810aac5d01ea25231cfc944b0c"},
+]
+
+[package.dependencies]
+botocore = ">=1.33.2,<2.0a.0"
+
+[package.extras]
+crt = ["botocore[crt] (>=1.33.2,<2.0a.0)"]
+
+[[package]]
 name = "scikit-learn"
 version = "1.5.2"
 description = "A set of python modules for machine learning and data mining"
@@ -3419,4 +3503,4 @@ scikit-learn = ["scikit-learn"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "80ff05c18478526a102713bb7445659bb96ea53a3c049a32755e776cb696e1b7"
+content-hash = "c2a8fce72bcbd3bcc2b42c26d2f940cb864f78e4aec4478b6975f2a8cc21f5f2"
