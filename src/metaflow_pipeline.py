@@ -1,6 +1,6 @@
 from pathlib import Path
-from src.extract import concatenate_filtered_data
-from src.transform import process_filtered_dataframe, add_missing_slots, process_feature_target_by_PULocationID
+from src.extract import fetch_data_if_not_exists, validate_and_process_data 
+from src.transform import process_feature_target_by_PULocationID,transform_to_time_series_data
 from src.paths import *
 from src.logger import get_logger
 import pandas as pd
@@ -25,38 +25,39 @@ class DataPipelineFlow(FlowSpec):
         self.years = range(2022, 2025)
         self.months = range(1, 13)
         self.logger = get_logger()
-        self.next(self.concatenate_data)
+        self.next(self.download_and_validate_data)
 
     @step
-    def concatenate_data(self):
-        """Concatenates filtered data for each PATH into a single DataFrame."""
-        self.df_concatenated_dict = {}
+    def download_and_validate_data(self):
+        """Downloads and validates data for each PATH, year, and month."""
         for path in self.paths:
-            df_concatenated = concatenate_filtered_data(path)
-            if df_concatenated.empty:
-                self.logger.info(f"No filtered data to concatenate for {path}.")
+            for year in self.years:
+                for month in self.months:
+                    fetch_data_if_not_exists(path, year, month)
+                    validate_and_process_data(path, year, month)
+        self.next(self.transform_data_to_time_series)
+
+    @step
+    def transform_data_to_time_series(self):
+        """Transforms filtered data into time-series format for each PATH."""
+        self.time_series_data_dict = {}
+        for path in self.paths:
+            df_time_series = transform_to_time_series_data(path, self.logger)
+            if df_time_series.empty:
+                self.logger.info(f"No data available for transformation for {path}.")
             else:
-                self.save_dataframe(df_concatenated, TIME_SERIES_DATA_DIR, f"{path}.parquet", "Saved concatenated data to")
-                self.df_concatenated_dict[path] = df_concatenated
-        self.next(self.process_data)
+                # Save the final transformed time-series data
+                self.save_dataframe(df_time_series, TIME_SERIES_DATA_DIR, f"{path}_time_series.parquet", "Saved final time-series data to")
+                self.time_series_data_dict[path] = df_time_series
+        self.next(self.transform_to_feature_target)
 
     @step
-    def process_data(self):
-        """Processes data by grouping and filling missing slots."""
-        self.grouped_dfs = {}
-        for path, df_filtered in self.df_concatenated_dict.items():
-            df_grouped = add_missing_slots(process_filtered_dataframe(df_filtered))
-            self.save_dataframe(df_grouped, TIME_SERIES_DATA_DIR, f"{path}_grouped.parquet", "Saved grouped data to")
-            self.grouped_dfs[path] = df_grouped
-        self.next(self.transform_data)
-
-    @step
-    def transform_data(self):
-        """Transforms data into a feature-target format for modeling."""
+    def transform_to_feature_target(self):
+        """Transforms time-series data into feature-target format for modeling."""
         self.transformed_data = {}
-        for path, df_grouped in self.grouped_dfs.items():
+        for path, df_time_series in self.time_series_data_dict.items():
             feature_df, target_df = process_feature_target_by_PULocationID(
-                df_grouped, n_features=self.n_features, step_size=self.step_size
+                df_time_series, n_features=self.n_features, step_size=self.step_size
             )
             feature_target_df = feature_df.join(pd.DataFrame(target_df, columns=['target_rides_next_hour']))
             self.save_dataframe(feature_target_df, TRANSFORMED_DATA_DIR, f"{path}_features_target.parquet", "Saved transformed feature-target data to")

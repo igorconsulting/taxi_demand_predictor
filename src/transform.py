@@ -3,6 +3,7 @@ import pandas as pd
 from tqdm import tqdm
 import numpy as np
 from src.logger import get_logger
+from src.extract import concatenate_filtered_data
 
 logger = get_logger()
 # Step 1: Function to add the 'pickup_hour' column and group data by 'pickup_hour' and 'PULocationID'
@@ -29,6 +30,15 @@ def process_filtered_dataframe(df) -> pd.DataFrame:
 
 # Step 2: Function to add missing slots (time series transformation)
 def add_missing_slots(df_grouped) -> pd.DataFrame:
+    """
+    Add missing slots to the time series data by filling in zeros for missing hours.
+
+    Args:
+    - df_grouped: A DataFrame with the number of rides for each 'pickup_hour' and 'PULocationID'.
+
+    Returns:
+    - A DataFrame with all missing hours filled in with zeros for each 'PULocationID'.
+    """
     location_ids = df_grouped['PULocationID'].unique()
     full_range = pd.date_range(
         start=df_grouped['pickup_hour'].min(), end=df_grouped['pickup_hour'].max(), freq='h'
@@ -57,6 +67,27 @@ def add_missing_slots(df_grouped) -> pd.DataFrame:
     output = output.reset_index(drop=True)
     
     return output
+
+def transform_to_time_series_data(path,logger):
+    """
+    Transforms filtered data for a specific path into time-series format by
+    concatenating, filling missing slots, and grouping data.
+
+    Args:
+        path (str): Identifier for the dataset.
+        logger: Logger instance for logging info and errors.
+
+    Returns:
+        pd.DataFrame: Transformed time-series DataFrame.
+    """
+    # Concatenate filtered data
+    df_filtered = concatenate_filtered_data(path)
+
+    # Process and group data
+    df_grouped = add_missing_slots(process_filtered_dataframe(df_filtered))
+    logger.info(f"Data transformed to time-series format for {path}")
+    
+    return df_grouped
 
 
 # Step 3: Function to generate the feature matrix and target vector
