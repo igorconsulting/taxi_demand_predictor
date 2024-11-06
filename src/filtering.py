@@ -15,4 +15,8 @@ def select_important_columns(df, path):
     if path == FHV:
         columns_map['PUlocationID'] = 'PULocationID'
     df = df.rename(columns=columns_map).copy()
-    return df[['pickup_datetime', 'PULocationID']].dropna()
+
+    df = df.rename(columns={
+            'tpep_pickup_datetime': 'pickup_datetime',
+            'PULocationID': 'pickup_location_id'}).copy()
+    return df[['pickup_datetime', 'pickup_location_id']].dropna()

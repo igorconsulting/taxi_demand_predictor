@@ -26,7 +26,7 @@ def check_file_exists(path, year, month):
     file_path = Path(RAW_DATA_DIR) / f"{path}_{year}-{str(month).zfill(2)}.parquet"
     return file_path.exists()
 
-def fetch_data_if_not_exists(path, year, month):
+def  fetch_data_if_not_exists(path, year, month):
     """Download data if it doesn't already exist."""
     if check_file_exists(path, year, month):
         logger.info(f'{path}_{year}-{str(month).zfill(2)}.parquet already exists. Skipping download.')

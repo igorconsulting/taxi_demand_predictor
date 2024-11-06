@@ -2,7 +2,8 @@ from pathlib import Path
 from datetime import datetime, timedelta
 from typing import Optional, List, Tuple
 from pdb import set_trace as stop
-from src.extract import fetch_data_if_not_exists, validate_and_process_data
+from src.extract import fetch_data_if_not_exists
+from src.filtering import select_important_columns,filter_by_date_range
 
 import numpy as np
 import pandas as pd
@@ -13,9 +14,10 @@ from src.paths import RAW_DATA_DIR, TRANSFORMED_DATA_DIR
 
 #refactoring the load_raw_data function
 def load_raw_data(
-    year: int,
-    months: Optional[List[int]] = None
-) -> pd.DataFrame:
+        PATH,
+        year: int,
+        months: Optional[List[int]] = None
+    ) -> pd.DataFrame:
     """
     Loads raw data from local storage or downloads it from the NYC website, and
     then loads it into a Pandas DataFrame
@@ -40,7 +42,7 @@ def load_raw_data(
 
     for month in months:
         
-        local_file = RAW_DATA_DIR / f'rides_{year}-{month:02d}.parquet'
+        local_file = RAW_DATA_DIR / f'{PATH}_{year}-{month:02d}.parquet'
         if not local_file.exists():
             try:
                 # download the file from the NYC website
@@ -56,14 +58,9 @@ def load_raw_data(
         rides_one_month = pd.read_parquet(local_file)
 
         # rename columns
-        rides_one_month = rides_one_month[['tpep_pickup_datetime', 'PULocationID']]
-        rides_one_month.rename(columns={
-            'tpep_pickup_datetime': 'pickup_datetime',
-            'PULocationID': 'pickup_location_id',
-        }, inplace=True)
-
-        # validate the file
-        rides_one_month = validate_and_process_data(rides_one_month, year, month)
+        rides_one_month = select_important_columns(rides_one_month, PATH)
+        
+        rides_one_month = filter_by_date_range(rides_one_month, year, month, date_column='pickup_datetime')
 
         # append to existing data
         rides = pd.concat([rides, rides_one_month])
