@@ -1,5 +1,5 @@
 from pathlib import Path
-import os
+
 
 # Defines base directory and data subdirectories
 PARENT_DIR = Path(__file__).resolve().parent
